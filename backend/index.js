@@ -8,7 +8,6 @@ const app = express();
 const port = 3000;
 
 app.use(express.json());
-
 app.use(cors());
 
 const Task = require('./schemas/Task');
@@ -16,7 +15,6 @@ const Task = require('./schemas/Task');
 app.get('/', (req, res) => {
     res.json({ message: 'Welcome to the Task Management API' });
 });
-
 
 mongoose.connect(process.env.MONGODB_URI)
     .then(() => {
@@ -40,6 +38,28 @@ app.get('/tasks', async (req, res) => {
     }
 });
 
+// New POST endpoint to create a task
+app.post('/tasks', async (req, res) => {
+    const { title, dueDate, priority, status } = req.body;
 
-// Write an endpoint to create a new task.
+    // Validate that all required fields are present
+    if (!title || !dueDate || !priority || !status) {
+        return res.status(400).json({ message: 'All fields are required' });
+    }
 
+    // Create a new task
+    const task = new Task({
+        title,
+        dueDate,
+        priority,
+        status
+    });
+
+    try {
+        const savedTask = await task.save();
+        res.status(201).json(savedTask);
+    } catch (err) {
+        console.error('Error saving task:', err);
+        res.status(500).json({ message: 'Server Error' });
+    }
+});
